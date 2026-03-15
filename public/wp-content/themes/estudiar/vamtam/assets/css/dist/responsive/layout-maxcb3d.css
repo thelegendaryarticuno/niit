@@ -1,0 +1,206 @@
+.page-wrapper > .left-only {
+  max-width: calc(100% - var(--vamtam-left-sidebar-width, 30%));
+}
+header.main-header .header-contents,
+header.main-header .header-content-wrapper {
+  box-sizing: border-box;
+}
+#sub-header {
+  position: relative;
+}
+body.layout-full .alignwide {
+  max-width: 90% !important;
+}
+:not(.vamtam-limited-layout).home.blog.layout-full .page-content > .loop-wrapper.regular,
+:not(.vamtam-limited-layout).archive.layout-full .page-content > .loop-wrapper.regular,
+:not(.vamtam-limited-layout).search-results.layout-full .page-content > .loop-wrapper.regular {
+  max-width: 70%;
+}
+body.vamtam-limited-layout .vamtam-body-sidebar {
+  margin-top: var(--vamtam-sidebar-content-margin);
+}
+.woocommerce .woocommerce-ordering {
+  margin: 0 0 var(--vamtam-sidebar-content-margin);
+}
+.woocommerce .vamtam-cart-main {
+  background-color: transparent;
+}
+.woocommerce .vamtam-cart-main .product-thumbnail > a,
+.woocommerce .vamtam-cart-main .product-thumbnail > a > img {
+  display: block;
+}
+.woocommerce .vamtam-cart-main .woocommerce-cart-form__contents {
+  overflow-x: visible;
+}
+.woocommerce .vamtam-cart-main .cart_item {
+  grid-template-rows: auto;
+}
+.woocommerce .vamtam-cart-main .cart_item:not(:last-of-type) {
+  border-bottom: 1px solid var(--vamtam-default-line-color);
+}
+.woocommerce .vamtam-cart-main .product-remove {
+  padding-top: 0.55em;
+}
+.woocommerce .vamtam-cart-main .product-price:before {
+  display: none;
+}
+.woocommerce .vamtam-cart-main .product-price .quantity .vamtam-quantity select {
+  border: 1px solid var(--vamtam-default-line-color);
+}
+.vamtam-sticky-header {
+  z-index: 100;
+  transition: transform 0.2s ease !important;
+  will-change: transform;
+  left: 0;
+  right: 0;
+}
+.vamtam-sticky-header > .elementor-container {
+  opacity: 0;
+  -webkit-animation: vamtam-sticky-header-fadein 1s ease forwards;
+          animation: vamtam-sticky-header-fadein 1s ease forwards;
+}
+@-webkit-keyframes vamtam-sticky-header-fadein {
+  0% {
+    opacity: 0;
+  }
+  90% {
+    opacity: 0;
+  }
+  99% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes vamtam-sticky-header-fadein {
+  0% {
+    opacity: 0;
+  }
+  90% {
+    opacity: 0;
+  }
+  99% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+.vamtam-sticky-header.vamtam-sticky-header--transparent-header {
+  transition: transform 0.15s linear, background-color 0.35s ease !important;
+  will-change: transform, background-color;
+}
+.vamtam-sticky-header[class*="vamtam-sticky-header--fixed"] {
+  position: fixed !important;
+}
+.vamtam-sticky-header.vamtam-sticky-header--fixed-shown {
+  transform: translateY(0);
+}
+.vamtam-sticky-header.vamtam-sticky-header--fixed-shown.vamtam-sticky-header--transparent-header {
+  background-color: var(--vamtam-sticky-header-bg-color) !important;
+}
+.vamtam-sticky-header.vamtam-sticky-header--fixed-hidden {
+  transform: translateY(-100%);
+}
+body.admin-bar.dialog-prevent-scroll {
+  max-height: calc(100vh - 32px);
+}
+.elementor-widget-tabs.vamtam-has-numbering-bg .elementor-tabs .elementor-tab-mobile-title {
+  display: none;
+}
+.elementor-widget-tabs.vamtam-has-theme-hr-tabs-style .elementor-tabs {
+  position: relative;
+}
+.elementor-widget-tabs.vamtam-has-theme-hr-tabs-style .elementor-tabs-wrapper {
+  position: absolute;
+  padding: 0;
+  bottom: 0;
+  z-index: 1;
+  width: 100%;
+  display: flex;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.elementor-widget-tabs.vamtam-has-theme-hr-tabs-style .elementor-tabs-wrapper .elementor-tab-desktop-title {
+  padding: 0;
+}
+.elementor-widget-tabs.vamtam-has-theme-hr-tabs-style .elementor-tabs-wrapper .elementor-tab-desktop-title:not(:first-of-type) {
+  margin-left: 30px;
+}
+.elementor-widget-tabs.vamtam-has-theme-hr-tabs-style .elementor-tabs-wrapper .elementor-tab-desktop-title:not(:last-of-type) {
+  margin-right: 30px;
+}
+.elementor-widget-tabs.vamtam-has-theme-hr-tabs-style .elementor-tabs-wrapper > .elementor-tab-title {
+  width: 100%;
+  position: relative;
+}
+.elementor-widget-tabs.vamtam-has-theme-hr-tabs-style .elementor-tabs-wrapper > .elementor-tab-title > a {
+  display: block;
+  padding: 30px 0;
+}
+.elementor-widget-tabs.vamtam-has-theme-hr-tabs-style .elementor-tabs-wrapper > .elementor-tab-title > a::before {
+  content: "";
+  z-index: 1;
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: unset;
+  width: unset;
+  height: 2px;
+  background-size: 200% 100%;
+  background-position: right center;
+  transition: all 1s ease;
+}
+.elementor-widget-tabs.vamtam-has-theme-hr-tabs-style .elementor-tabs-wrapper > .elementor-tab-title:not(.elementor-active) > a::before {
+  background-image: linear-gradient(to right, var(--vamtam-overline-bg-hover-color, var(--vamtam-accent-color-2)) 50%, var(--vamtam-overline-bg-color, var(--vamtam-accent-color-5)) 50%);
+}
+.elementor-widget-tabs.vamtam-has-theme-hr-tabs-style .elementor-tabs-wrapper > .elementor-tab-title:not(.elementor-active) > a:hover::before {
+  background-position: left center;
+}
+.elementor-widget-tabs.vamtam-has-theme-hr-tabs-style .elementor-tabs-wrapper > .elementor-tab-title.elementor-active > a::before {
+  background-image: linear-gradient(to right, var(--vamtam-overline-bg-hover-color, var(--vamtam-accent-color-2)) 50%, var(--vamtam-overline-bg-hover-color, var(--vamtam-accent-color-2)) 50%);
+}
+.elementor-widget-tabs.vamtam-has-theme-hr-tabs-style .elementor-tab-title a {
+  color: var(--vamtam-accent-color-5);
+}
+body.admin-bar .elementor-widget-woocommerce-menu-cart .elementor-menu-cart__container {
+  height: calc(100vh - 32px);
+}
+body:not(.wp-admin):not(.elementor-editor-active).has-mouse-dot #mouseDot {
+  pointer-events: none;
+  position: fixed;
+  background-color: var(--vamtam-accent-color-1);
+  border-radius: 50%;
+  z-index: 10000;
+  width: 10px;
+  height: 10px;
+  top: -5px;
+  left: -5px;
+  transition: top 0.3s linear, left 0.3s linear, width 0.3s linear, height 0.3s linear, opacity 0.3s ease;
+  will-change: transform, width, height;
+  opacity: 1;
+}
+body:not(.wp-admin):not(.elementor-editor-active).has-mouse-dot #mouseDot.over-link {
+  width: 70px;
+  height: 70px;
+  top: -35px;
+  left: -35px;
+  opacity: 0.2;
+}
+body:not(.wp-admin):not(.elementor-editor-active).has-mouse-dot #mouseDot.over-iframe {
+  opacity: 0;
+}
+.meta-header-inside {
+  min-height: 20vh;
+}
+.page-header {
+  justify-content: center;
+}
+body.layout-full .page-header {
+  text-align: center;
+  align-items: center;
+}
+/*# sourceMappingURL=layout-max.css.map */

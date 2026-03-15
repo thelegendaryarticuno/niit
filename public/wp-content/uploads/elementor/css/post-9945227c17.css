@@ -1,0 +1,46 @@
+.elementor-994522 .elementor-element.elementor-element-83d7901{overflow:hidden;padding:0px 0px 0px 0px;}.elementor-994522 .elementor-element.elementor-element-c2ac220 > .elementor-element-populated{padding-block-start:0px;padding-inline-start:0px;padding-block-end:0px;padding-inline-end:0px;}.elementor-994522 .elementor-element.elementor-element-c0164b0 .elementor-heading-title{color:var( --e-global-color-vamtam_accent_5 );}.elementor-994522 .elementor-element.elementor-element-dac111b > .elementor-widget-container{margin:0px 0px 0px 0px;padding:0px 0px 0px 0px;}.elementor-994522 .elementor-element.elementor-element-dac111b .elementor-thumbnails-swiper .elementor-carousel-image{aspect-ratio:16 / 9;}.elementor-994522 .elementor-element.elementor-element-dac111b .elementor-swiper-button{font-size:20px;}#elementor-popup-modal-994522 .dialog-widget-content{animation-duration:1.2s;background-color:#FFFAF5;}#elementor-popup-modal-994522{background-color:rgba(0,0,0,.8);justify-content:center;align-items:center;pointer-events:all;}#elementor-popup-modal-994522 .dialog-message{width:752px;height:539px;align-items:flex-start;}@media(max-width:1024px){.elementor-994522 .elementor-element.elementor-element-dac111b.elementor-skin-slideshow .elementor-main-swiper:not(.elementor-thumbnails-swiper){margin-bottom:10px;}}@media(max-width:767px){.elementor-994522 .elementor-element.elementor-element-83d7901{padding:0px 20px 0px 20px;}.elementor-994522 .elementor-element.elementor-element-c2ac220 > .elementor-element-populated{margin-block-start:0px;margin-inline-start:0px;margin-block-end:0px;margin-inline-end:0px;--e-column-margin-right:0px;--e-column-margin-left:0px;}.elementor-994522 .elementor-element.elementor-element-dac111b.elementor-skin-slideshow .elementor-main-swiper:not(.elementor-thumbnails-swiper){margin-bottom:10px;}.elementor-994522 .elementor-element.elementor-element-dac111b .elementor-main-swiper:not(.elementor-thumbnails-swiper){height:237px;}#elementor-popup-modal-994522 .dialog-message{height:300px;}}/* Start custom CSS for section, class: .elementor-element-83d7901 */.dialog-close-button {
+    color: #fff;
+}
+
+.in-pictures-slider .swiper-pagination-bullets {
+    bottom: 10px;
+}
+
+.in-pictures-slider .elementor-slide-heading {
+    position: absolute;
+    left: 20px;
+    bottom: 40px;
+    font-size: 18px !important;
+}
+
+.in-pictures-slider .elementor-swiper-button {
+    display: block;
+}
+
+.elementor-thumbnails-swiper .swiper-slide{ padding:10px 5px !important; position:relative; margin:0 !important;}
+
+.elementor-thumbnails-swiper
+.swiper-slide:before{content:'';
+    position: absolute;
+    top: 10px;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    left: 5px;
+    right: 5px;
+    z-index: 2;
+    bottom: 10px;}
+
+.elementor-thumbnails-swiper
+.swiper-slide.swiper-slide-active:before{ background:transparent;}
+
+.elementor-thumbnails-swiper
+.swiper-slide{ transition:transfrom 0.6s;}
+
+.elementor-thumbnails-swiper
+.swiper-slide.swiper-slide-active{ transform:scale(1.2); z-index:9;}
+
+.elementor-main-swiper{ position:relative;}
+.elementor-main-swiper .swiper-slide.swiper-slide-active .caption{ position:absolute; left:20px; bottom:20px; z-index:9; font-size:16px; line-height:24px; color:#fff;}/* End custom CSS */
+/* Start custom CSS */.in-picture-popup .dialog-widget-content{
+	background: transparent!important;
+}/* End custom CSS */

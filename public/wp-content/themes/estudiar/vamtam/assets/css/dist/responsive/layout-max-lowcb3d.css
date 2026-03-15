@@ -1,0 +1,10 @@
+.responsive-layout .layout-left-only .loop-wrapper.regular .post-media,
+.responsive-layout .layout-right-only .loop-wrapper.regular .post-media {
+  flex-basis: 100%;
+  margin-bottom: var(--vamtam-vertical-padding);
+}
+.elementor-widget-tabs.vamtam-has-theme-hr-tabs-style .elementor-tabs-wrapper {
+  padding-left: 30px !important;
+  padding-right: 30px !important;
+}
+/*# sourceMappingURL=layout-max-low.css.map */

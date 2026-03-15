@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  overflow-x: clip;
+  background: #ffffff;
+  color: #171717;
+}
+
+a {
+  text-decoration-skip-ink: auto;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.niit-site-root {
+  position: relative;
+  overflow: clip;
+}
+
+[data-niit-route-list] {
+  list-style: none;
+}
+
+[data-niit-route-list] > li.current-menu-item > a,
+[data-niit-route-list] > li.current_page_item > a {
+  color: #f04323;
+}
+
+.ekit-template-content-header {
+  z-index: 999;
+}
+
+#top-navbar-kit .elementskit-menu-container {
+  width: 100%;
+}
+
+#top-navbar-kit [data-niit-route-list] {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 1024px) {
+  #top-menu-logo img {
+    max-width: 180px;
+    height: auto;
+  }
+
+  #top-menu .top-menu-wrap {
+    gap: 16px;
+  }
+}
+
+@media (max-width: 767px) {
+  #top-menu .reach-us-wrap {
+    display: none;
+  }
+}
