@@ -3,24 +3,73 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import * as cheerio from "cheerio";
 
-// Local regeneration helper.
-// The checked-in generated TS file is enough for dev/build/deploy.
-// Only run this when you intentionally refresh data from extracted HTML.
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
-const htmlDir = path.join(rootDir, "htmlpages");
-const outputDir = path.join(rootDir, "lib", "generated");
-const outputFile = path.join(outputDir, "niit-site-data.ts");
+const snapshotDir = path.join(rootDir, "htmlpages");
+const generatedLibDir = path.join(rootDir, "lib", "generated");
+const generatedLibFile = path.join(generatedLibDir, "niit-site-data.ts");
+const generatedComponentsDir = path.join(rootDir, "components", "niit", "generated");
+const generatedPagesDir = path.join(generatedComponentsDir, "pages");
+
+const siteOrigin = "https://niituniversity.in";
 
 const pageDefinitions = [
-  { key: "home", file: "index.html", route: "/", label: "Home" },
-  { key: "aboutUs", file: "about-us.html", route: "/about-us", label: "About us" },
-  { key: "blogsNewsletter", file: "blogs-newsletter.html", route: "/blogs-newsletter", label: "Blog & Newsletter" },
-  { key: "latestAtNu", file: "latest-at-nu.html", route: "/latest-at-nu", label: "Latest at NU" },
-  { key: "alumni", file: "alumni.html", route: "/alumni", label: "Alumni" },
-  { key: "careersNu", file: "careers-nu.html", route: "/careers-nu", label: "Careers @ NU" },
-  { key: "quickLinks", file: "quick-links.html", route: "/quick-links", label: "Quick links" },
+  {
+    key: "home",
+    componentName: "HomePageContent",
+    fileName: "home-page-content.tsx",
+    snapshotFile: "index.html",
+    route: "/",
+    url: `${siteOrigin}/`,
+  },
+  {
+    key: "aboutUs",
+    componentName: "AboutUsPageContent",
+    fileName: "about-us-page-content.tsx",
+    snapshotFile: "about-us.html",
+    route: "/about-us",
+    url: `${siteOrigin}/about-us`,
+  },
+  {
+    key: "blogsNewsletter",
+    componentName: "BlogsNewsletterPageContent",
+    fileName: "blogs-newsletter-page-content.tsx",
+    snapshotFile: "blogs-newsletter.html",
+    route: "/blogs-newsletter",
+    url: `${siteOrigin}/blogs-newsletter`,
+  },
+  {
+    key: "latestAtNu",
+    componentName: "LatestAtNuPageContent",
+    fileName: "latest-at-nu-page-content.tsx",
+    snapshotFile: "latest-at-nu.html",
+    route: "/latest-at-nu",
+    url: `${siteOrigin}/latest-at-nu`,
+  },
+  {
+    key: "alumni",
+    componentName: "AlumniPageContent",
+    fileName: "alumni-page-content.tsx",
+    snapshotFile: "alumni.html",
+    route: "/alumni",
+    url: `${siteOrigin}/alumni`,
+  },
+  {
+    key: "careersNu",
+    componentName: "CareersNuPageContent",
+    fileName: "careers-nu-page-content.tsx",
+    snapshotFile: "careers-nu.html",
+    route: "/careers-nu",
+    url: `${siteOrigin}/careers-nu`,
+  },
+  {
+    key: "quickLinks",
+    componentName: "QuickLinksPageContent",
+    fileName: "quick-links-page-content.tsx",
+    snapshotFile: "quick-links.html",
+    route: "/quick-links",
+    url: `${siteOrigin}/quick-links`,
+  },
 ];
 
 const routeMap = new Map([
@@ -76,12 +125,88 @@ const sharedInlineScriptIds = new Set([
   "elementskit-elementor-js-extra",
 ]);
 
+const voidTags = new Set([
+  "area",
+  "base",
+  "br",
+  "col",
+  "embed",
+  "hr",
+  "img",
+  "input",
+  "link",
+  "meta",
+  "param",
+  "source",
+  "track",
+  "wbr",
+]);
+
+const inlineTags = new Set([
+  "a",
+  "b",
+  "br",
+  "cite",
+  "font",
+  "i",
+  "img",
+  "input",
+  "span",
+  "strong",
+  "time",
+]);
+
+const attributeMap = new Map([
+  ["class", "className"],
+  ["for", "htmlFor"],
+  ["tabindex", "tabIndex"],
+  ["srcset", "srcSet"],
+  ["fetchpriority", "fetchPriority"],
+  ["itemprop", "itemProp"],
+  ["allowfullscreen", "allowFullScreen"],
+  ["frameborder", "frameBorder"],
+  ["colspan", "colSpan"],
+  ["rowspan", "rowSpan"],
+  ["contenteditable", "contentEditable"],
+  ["spellcheck", "spellCheck"],
+  ["readonly", "readOnly"],
+  ["maxlength", "maxLength"],
+  ["minlength", "minLength"],
+  ["autocomplete", "autoComplete"],
+  ["autofocus", "autoFocus"],
+  ["crossorigin", "crossOrigin"],
+  ["referrerpolicy", "referrerPolicy"],
+  ["playsinline", "playsInline"],
+  ["datetime", "dateTime"],
+]);
+
+const booleanAttributes = new Set([
+  "required",
+  "checked",
+  "selected",
+  "muted",
+  "disabled",
+  "readOnly",
+  "autoFocus",
+  "allowFullScreen",
+  "playsInline",
+]);
+
+const droppedAttributes = new Set(["display", "postion"]);
+const numericAttributes = new Set(["tabIndex", "colSpan", "rowSpan", "size"]);
+
 function normalizePathSlashes(value) {
   return value.replace(/\\/g, "/");
 }
 
 function stripSiteOrigin(value) {
-  return value.replace(/^https?:\/\/(?:www\.)?niituniversity\.in\/?/i, "");
+  const stripped = value.replace(/^https?:\/\/(?:www\.)?niituniversity\.in\/?/i, "");
+
+  if (!stripped && /^https?:\/\/(?:www\.)?niituniversity\.in\/?$/i.test(value)) {
+    return "/";
+  }
+
+  return stripped;
 }
 
 function splitSuffix(value) {
@@ -92,7 +217,7 @@ function splitSuffix(value) {
   };
 }
 
-function makeAbsoluteAssetPath(input) {
+function makeAbsoluteAssetUrl(input) {
   const trimmed = input.trim();
 
   if (
@@ -109,7 +234,7 @@ function makeAbsoluteAssetPath(input) {
   if (/^https?:\/\//i.test(trimmed)) {
     const localCandidate = stripSiteOrigin(trimmed);
     if (localCandidate !== trimmed) {
-      return makeAbsoluteAssetPath(localCandidate);
+      return makeAbsoluteAssetUrl(localCandidate);
     }
 
     return trimmed;
@@ -121,11 +246,11 @@ function makeAbsoluteAssetPath(input) {
     .replace(/^\//, "");
 
   if (assetPrefixes.some((prefix) => normalized.startsWith(prefix))) {
-    return `/${normalized}`;
+    return `${siteOrigin}/${normalized}`;
   }
 
   if (rootAssetFiles.includes(normalized)) {
-    return `/${normalized}`;
+    return `${siteOrigin}/${normalized}`;
   }
 
   return trimmed;
@@ -151,7 +276,7 @@ function rewriteHref(input) {
     return `${rewriteHref(basePath)}${suffix}`;
   }
 
-  const absoluteAsset = makeAbsoluteAssetPath(basePath);
+  const absoluteAsset = makeAbsoluteAssetUrl(basePath);
   if (absoluteAsset !== basePath) {
     return `${absoluteAsset}${suffix}`;
   }
@@ -162,11 +287,13 @@ function rewriteHref(input) {
 
   const normalized = normalizePathSlashes(basePath)
     .replace(/^\.\//, "")
-    .replace(/^\/+/, "");
+    .replace(/^\/+/, "")
+    .replace(/\/$/, "");
 
   const route =
     routeMap.get(normalized) ??
     routeMap.get(normalized.replace(/\/index\.html$/i, "")) ??
+    routeMap.get(normalized.replace(/index\.html$/i, "")) ??
     routeMap.get(normalized.replace(/\.html$/i, ""));
 
   if (route) {
@@ -178,7 +305,11 @@ function rewriteHref(input) {
     .replace(/index\.html$/i, "")
     .replace(/\.html$/i, "");
 
-  return `https://niituniversity.in/${externalPath}${suffix}`;
+  if (!externalPath) {
+    return `${siteOrigin}/${suffix}`;
+  }
+
+  return `${siteOrigin}/${externalPath}${suffix}`;
 }
 
 function rewriteSrcset(value) {
@@ -191,7 +322,7 @@ function rewriteSrcset(value) {
       }
 
       const [url, ...rest] = trimmed.split(/\s+/);
-      const rewrittenUrl = makeAbsoluteAssetPath(url);
+      const rewrittenUrl = makeAbsoluteAssetUrl(url);
       return [rewrittenUrl, ...rest].join(" ").trim();
     })
     .filter(Boolean)
@@ -200,7 +331,7 @@ function rewriteSrcset(value) {
 
 function rewriteCssUrls(value) {
   return value.replace(/url\((['"]?)([^'")]+)\1\)/g, (match, quote, url) => {
-    const rewritten = makeAbsoluteAssetPath(url);
+    const rewritten = makeAbsoluteAssetUrl(url);
     return rewritten === url ? match : `url(${quote}${rewritten}${quote})`;
   });
 }
@@ -210,7 +341,7 @@ function sanitizeFragment(fragmentHtml) {
     decodeEntities: false,
   });
 
-  $("script, noscript, link[rel='stylesheet']").remove();
+  $("script, noscript, style, link[rel='stylesheet']").remove();
   $("button.responsivevoice-button")
     .closest(".elementor-element, .elementor-widget, .elementor-shortcode")
     .remove();
@@ -226,7 +357,7 @@ function sanitizeFragment(fragmentHtml) {
     $(`[${attribute}]`).each((_, element) => {
       const value = $(element).attr(attribute);
       if (value) {
-        $(element).attr(attribute, makeAbsoluteAssetPath(value));
+        $(element).attr(attribute, makeAbsoluteAssetUrl(value));
       }
     });
   });
@@ -321,14 +452,6 @@ function extractInlineScripts($) {
   return scripts;
 }
 
-function serializeInlineScripts(scripts) {
-  return JSON.stringify(scripts, null, 2);
-}
-
-function serializeStringArray(values) {
-  return JSON.stringify(values, null, 2);
-}
-
 function createHeaderFragment(homeHtml) {
   const $ = cheerio.load(homeHtml, { decodeEntities: false });
   const wrapper = $(".ekit-template-content-markup").first();
@@ -348,22 +471,8 @@ function createHeaderFragment(homeHtml) {
   }
 
   const menuList = navSection.find("#menu-top-navigation").first();
-  menuList.empty().attr("data-niit-route-list", "true");
-
-  for (const item of pageDefinitions) {
-    const menuItem = $("<li></li>")
-      .addClass(
-        "menu-item menu-item-type-custom menu-item-object-custom nav-item elementskit-mobile-builder-content"
-      )
-      .attr("data-vertical-menu", "750px");
-
-    const link = $("<a></a>")
-      .addClass("ekit-menu-nav-link")
-      .attr("href", item.route)
-      .text(item.label);
-
-    menuItem.append(link);
-    menuList.append(menuItem);
+  if (menuList.length) {
+    menuList.attr("data-niit-route-list", "true");
   }
 
   navSection.find("#responsivetextlistner").remove();
@@ -372,43 +481,332 @@ function createHeaderFragment(homeHtml) {
   return sanitizeFragment(html);
 }
 
-function buildPageData(fileName) {
-  return fs.readFile(path.join(htmlDir, fileName), "utf8").then((html) => {
-    const $ = cheerio.load(html, { decodeEntities: false });
-
-    return {
-      html,
-      title: $("title").text().trim(),
-      bodyClass: ($("body").attr("class") ?? "").trim(),
-      contentHtml: sanitizeFragment($(".page-wrapper").html() ?? ""),
-      inlineScripts: extractInlineScripts($),
-    };
+function createFooterFragment(homeHtml) {
+  const $ = cheerio.load(homeHtml, { decodeEntities: false });
+  const wrapper = cheerio.load(`<root>${$(".footer-wrapper").html() ?? ""}</root>`, {
+    decodeEntities: false,
   });
+
+  wrapper("input[name='referer_title']").attr("data-niit-dynamic", "refererTitle").removeAttr("value");
+  wrapper("input[name='queried_id']").attr("data-niit-dynamic", "queriedId").removeAttr("value");
+
+  return sanitizeFragment(wrapper("root").html() ?? "");
+}
+
+function extractQueriedId(bodyClass) {
+  const pageId = bodyClass.match(/\bpage-id-(\d+)\b/)?.[1];
+  if (pageId) {
+    return pageId;
+  }
+
+  return bodyClass.match(/\belementor-page-(\d+)\b/)?.[1] ?? "";
+}
+
+function cleanPageTitle(title) {
+  return title.replace(/Accessibility Tools[\s\S]*$/i, "").trim();
+}
+
+async function fetchPage(definition) {
+  const response = await fetch(definition.url, {
+    headers: {
+      "user-agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+      "accept-language": "en-US,en;q=0.9",
+    },
+    redirect: "follow",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch ${definition.url} (${response.status}).`);
+  }
+
+  return response.text();
+}
+
+function serializeStringArray(values) {
+  return JSON.stringify(values, null, 2);
+}
+
+function serializeInlineScripts(scripts) {
+  return JSON.stringify(scripts, null, 2);
+}
+
+function parseInlineStyle(styleText) {
+  const declarations = styleText
+    .split(";")
+    .map((declaration) => declaration.trim())
+    .filter(Boolean);
+
+  if (!declarations.length) {
+    return "undefined";
+  }
+
+  const parts = [];
+
+  for (const declaration of declarations) {
+    const separatorIndex = declaration.indexOf(":");
+    if (separatorIndex === -1) {
+      continue;
+    }
+
+    const rawName = declaration.slice(0, separatorIndex).trim();
+    const rawValue = declaration.slice(separatorIndex + 1).trim();
+
+    if (!rawName || !rawValue) {
+      continue;
+    }
+
+    const styleName = rawName.startsWith("--")
+      ? rawName
+      : rawName.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+
+    parts.push(`${JSON.stringify(styleName)}: ${JSON.stringify(rawValue.replace(/\s*!important\s*/gi, ""))}`);
+  }
+
+  if (!parts.length) {
+    return "undefined";
+  }
+
+  return `{ ${parts.join(", ")} }`;
+}
+
+function isInlineLikeNode(node) {
+  if (!node) {
+    return false;
+  }
+
+  if (node.type === "text") {
+    return Boolean(node.data.replace(/[ \t\r\n\f]+/g, ""));
+  }
+
+  if (node.type !== "tag") {
+    return false;
+  }
+
+  return inlineTags.has(node.name) || voidTags.has(node.name);
+}
+
+function renderTextNode(node, level, siblings, index) {
+  const collapsed = node.data.replace(/[ \t\r\n\f]+/g, " ");
+
+  if (!collapsed) {
+    return "";
+  }
+
+  if (!collapsed.trim()) {
+    const previous = siblings[index - 1];
+    const next = siblings[index + 1];
+
+    if (!isInlineLikeNode(previous) && !isInlineLikeNode(next)) {
+      return "";
+    }
+  }
+
+  return `${"  ".repeat(level)}{${JSON.stringify(collapsed)}}`;
+}
+
+function renderAttribute(name, value, element) {
+  const mappedName = attributeMap.get(name) ?? name;
+
+  if (droppedAttributes.has(mappedName)) {
+    return "";
+  }
+
+  if (name === "style") {
+    const styleObject = parseInlineStyle(value);
+    return styleObject === "undefined" ? "" : `style={${styleObject}}`;
+  }
+
+  if (name === "value" && element.name === "input") {
+    const dynamicSource = element.attribs["data-niit-dynamic"];
+    if (dynamicSource === "refererTitle") {
+      return "defaultValue={refererTitle}";
+    }
+
+    if (dynamicSource === "queriedId") {
+      return "defaultValue={queriedId}";
+    }
+
+    return `defaultValue={${JSON.stringify(value)}}`;
+  }
+
+  if (name === "checked" && element.name === "input") {
+    return "defaultChecked={true}";
+  }
+
+  if (name === "data-niit-dynamic") {
+    return "";
+  }
+
+  if (element.name === "font" && name === "size") {
+    return "";
+  }
+
+  if (value === "" && (mappedName === "target" || mappedName === "rel")) {
+    return "";
+  }
+
+  if (booleanAttributes.has(mappedName)) {
+    return `${mappedName}={true}`;
+  }
+
+  if (numericAttributes.has(mappedName) && /^-?\d+$/.test(value)) {
+    return `${mappedName}={${Number(value)}}`;
+  }
+
+  return `${mappedName}={${JSON.stringify(value)}}`;
+}
+
+function renderElement(node, level) {
+  const tagName = node.name === "font" ? "span" : node.name;
+  const attributes = Object.entries(node.attribs ?? {})
+    .map(([name, value]) => renderAttribute(name, value, node))
+    .filter(Boolean);
+
+  const dynamicSource = node.attribs?.["data-niit-dynamic"];
+  if (dynamicSource === "refererTitle") {
+    attributes.push("defaultValue={refererTitle}");
+  }
+
+  if (dynamicSource === "queriedId") {
+    attributes.push("defaultValue={queriedId}");
+  }
+
+  const openingTag = `${"  ".repeat(level)}<${tagName}${attributes.length ? ` ${attributes.join(" ")}` : ""}`;
+
+  if (voidTags.has(tagName)) {
+    return `${openingTag} />`;
+  }
+
+  const children = node.children
+    .map((child, index, siblings) => nodeToJsx(child, level + 1, siblings, index))
+    .filter(Boolean);
+
+  if (!children.length) {
+    return `${openingTag}></${tagName}>`;
+  }
+
+  return `${openingTag}>\n${children.join("\n")}\n${"  ".repeat(level)}</${tagName}>`;
+}
+
+function nodeToJsx(node, level, siblings, index) {
+  if (!node) {
+    return "";
+  }
+
+  if (node.type === "comment" || node.type === "directive" || node.type === "script" || node.type === "style") {
+    return "";
+  }
+
+  if (node.type === "text") {
+    return renderTextNode(node, level, siblings, index);
+  }
+
+  if (node.type === "tag") {
+    return renderElement(node, level);
+  }
+
+  return "";
+}
+
+function fragmentToJsx(fragmentHtml) {
+  const $ = cheerio.load(`<root>${fragmentHtml}</root>`, {
+    decodeEntities: false,
+  });
+
+  return $("root")[0].children
+    .map((node, index, siblings) => nodeToJsx(node, 3, siblings, index))
+    .filter(Boolean)
+    .join("\n");
+}
+
+function createComponentFile({ componentName, propsInterfaceName, propsSignature, fragmentHtml }) {
+  const imgRuleDirective = fragmentHtml.includes("<img") ? "/* eslint-disable @next/next/no-img-element */\n" : "";
+  const interfaceBlock = propsInterfaceName
+    ? `type ${propsInterfaceName} = {\n  refererTitle: string;\n  queriedId: string;\n};\n\n`
+    : "";
+
+  return `${imgRuleDirective}// This file is auto-generated by scripts/generate-niit-site-data.mjs.
+
+${interfaceBlock}export function ${componentName}(${propsSignature}) {
+  return (
+    <>
+${fragmentToJsx(fragmentHtml)}
+    </>
+  );
+}
+`;
+}
+
+function createRegistryFile() {
+  const imports = pageDefinitions
+    .map(
+      (page) =>
+        `import { ${page.componentName} } from "@/components/niit/generated/pages/${page.fileName.replace(/\.tsx$/, "")}";`
+    )
+    .join("\n");
+
+  const mappings = pageDefinitions
+    .map((page) => `  ${page.key}: ${page.componentName},`)
+    .join("\n");
+
+  return `// This file is auto-generated by scripts/generate-niit-site-data.mjs.
+
+import type { ComponentType } from "react";
+import type { NiitPageKey } from "@/lib/generated/niit-site-data";
+${imports}
+
+export const niitPageComponents: Record<NiitPageKey, ComponentType> = {
+${mappings}
+};
+`;
 }
 
 async function main() {
+  await fs.mkdir(snapshotDir, { recursive: true });
+  await fs.mkdir(generatedLibDir, { recursive: true });
+  await fs.mkdir(generatedPagesDir, { recursive: true });
+
   const pageEntries = await Promise.all(
-    pageDefinitions.map(async (definition) => ({
-      definition,
-      page: await buildPageData(definition.file),
-    }))
+    pageDefinitions.map(async (definition) => {
+      const html = await fetchPage(definition);
+      await fs.writeFile(path.join(snapshotDir, definition.snapshotFile), html, "utf8");
+
+      const $ = cheerio.load(html, { decodeEntities: false });
+      const bodyClass = ($("body").attr("class") ?? "").trim();
+
+      return {
+        definition,
+        html,
+        title: cleanPageTitle($("title").text().trim()),
+        bodyClass,
+        queriedId: extractQueriedId(bodyClass),
+        contentHtml: sanitizeFragment($(".page-wrapper").html() ?? ""),
+      };
+    })
   );
 
-  const homeHtml = pageEntries.find((entry) => entry.definition.key === "home")?.page.html;
+  const homeHtml = pageEntries.find((entry) => entry.definition.key === "home")?.html;
   if (!homeHtml) {
     throw new Error("Home page HTML could not be loaded.");
   }
 
   const home$ = cheerio.load(homeHtml, { decodeEntities: false });
-  const footerHtml = sanitizeFragment(home$(".footer-wrapper").html() ?? "");
+  const sharedInlineScripts = extractInlineScripts(home$).filter((script) => {
+    return (
+      sharedInlineScriptIds.has(script.id ?? "") ||
+      script.code.startsWith("var elementskit =") ||
+      script.code.startsWith("const lazyloadRunObserver")
+    );
+  });
 
   const stylesheetSet = new Set();
   const externalScriptSet = new Set();
   const styleBlocks = [];
   const seenStyleBlocks = new Set();
 
-  for (const { page } of pageEntries) {
-    const $ = cheerio.load(page.html, { decodeEntities: false });
+  for (const { html } of pageEntries) {
+    const $ = cheerio.load(html, { decodeEntities: false });
 
     $("link[rel='stylesheet']").each((_, element) => {
       const href = $(element).attr("href");
@@ -416,7 +814,7 @@ async function main() {
         return;
       }
 
-      stylesheetSet.add(makeAbsoluteAssetPath(href));
+      stylesheetSet.add(makeAbsoluteAssetUrl(href));
     });
 
     $("script[src]").each((_, element) => {
@@ -425,7 +823,7 @@ async function main() {
         return;
       }
 
-      externalScriptSet.add(makeAbsoluteAssetPath(src));
+      externalScriptSet.add(makeAbsoluteAssetUrl(src));
     });
 
     $("style").each((_, element) => {
@@ -439,29 +837,38 @@ async function main() {
     });
   }
 
-  const homeInlineScripts = extractInlineScripts(home$);
-  const sharedInlineScripts = homeInlineScripts.filter((script) => {
-    return (
-      sharedInlineScriptIds.has(script.id ?? "") ||
-      script.code.startsWith("var elementskit =") ||
-      script.code.startsWith("const lazyloadRunObserver")
-    );
-  });
+  const headerFragment = createHeaderFragment(homeHtml);
+  const footerFragment = createFooterFragment(homeHtml);
 
-  const pageDataOutput = Object.fromEntries(
-    pageEntries.map(({ definition, page }) => [
-      definition.key,
-      {
-        route: definition.route,
-        title: page.title,
-        bodyClass: page.bodyClass,
-        contentHtml: page.contentHtml,
-      },
-    ])
+  const siteChromeImgDirective = headerFragment.includes("<img") || footerFragment.includes("<img")
+    ? "/* eslint-disable @next/next/no-img-element */\n"
+    : "";
+
+  const siteChromeFile = `${siteChromeImgDirective}// This file is auto-generated by scripts/generate-niit-site-data.mjs.
+
+type NiitSiteFooterProps = {
+  refererTitle: string;
+  queriedId: string;
+};
+
+export function NiitSiteHeader() {
+  return (
+    <>
+${fragmentToJsx(headerFragment)}
+    </>
   );
+}
 
-  const fileContents = `/* eslint-disable */
-// This file is auto-generated by scripts/generate-niit-site-data.mjs.
+export function NiitSiteFooter({ refererTitle, queriedId }: NiitSiteFooterProps) {
+  return (
+    <>
+${fragmentToJsx(footerFragment)}
+    </>
+  );
+}
+`;
+
+  const libFileContents = `// This file is auto-generated by scripts/generate-niit-site-data.mjs.
 
 export type NiitInlineScript = {
   id: string | null;
@@ -477,18 +884,40 @@ export const sharedInlineScripts = ${serializeInlineScripts(sharedInlineScripts)
 
 export const sharedExternalScripts = ${serializeStringArray([...externalScriptSet])} as const;
 
-export const siteChrome = {
-  headerHtml: ${JSON.stringify(createHeaderFragment(homeHtml))},
-  footerHtml: ${JSON.stringify(footerHtml)},
-} as const;
-
-export const niitPages = ${JSON.stringify(pageDataOutput, null, 2)} as const;
+export const niitPages = ${JSON.stringify(
+    Object.fromEntries(
+      pageEntries.map(({ definition, title, bodyClass, queriedId }) => [
+        definition.key,
+        {
+          route: definition.route,
+          title,
+          bodyClass,
+          queriedId,
+        },
+      ])
+    ),
+    null,
+    2
+  )} as const;
 
 export type NiitPageKey = keyof typeof niitPages;
 `;
 
-  await fs.mkdir(outputDir, { recursive: true });
-  await fs.writeFile(outputFile, fileContents, "utf8");
+  await fs.writeFile(generatedLibFile, libFileContents, "utf8");
+  await fs.writeFile(path.join(generatedComponentsDir, "site-chrome.tsx"), siteChromeFile, "utf8");
+
+  for (const pageEntry of pageEntries) {
+    const fileContents = createComponentFile({
+      componentName: pageEntry.definition.componentName,
+      fragmentHtml: pageEntry.contentHtml,
+      propsInterfaceName: null,
+      propsSignature: "",
+    });
+
+    await fs.writeFile(path.join(generatedPagesDir, pageEntry.definition.fileName), fileContents, "utf8");
+  }
+
+  await fs.writeFile(path.join(generatedComponentsDir, "page-components.ts"), createRegistryFile(), "utf8");
 }
 
 main().catch((error) => {
